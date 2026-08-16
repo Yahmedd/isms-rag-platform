@@ -1,97 +1,182 @@
 # ISMS RAG Platform
 
-A Retrieval-Augmented Generation (RAG) platform designed to make information-security frameworks easier to query, explore, and compare through natural-language interaction.
+A bilingual Retrieval-Augmented Generation (RAG) platform for querying information-security frameworks and compliance documentation through natural language.
 
-The project combines document processing, semantic search, vector retrieval, and LLM-based response generation for ISMS and cybersecurity compliance use cases.
+The project combines document processing, multilingual embeddings, semantic retrieval, vector storage, and LLM-based response generation to make standards such as **ISO/IEC 27001, NIST Cybersecurity Framework, and CIS Controls** easier to explore.
 
-## Overview
+## Project Overview
 
-Security frameworks such as ISO/IEC 27001, NIST CSF, and CIS Controls contain large amounts of structured guidance that can be difficult to navigate manually.
+Security frameworks contain large amounts of structured guidance that can be difficult to navigate manually.
 
-This project implements a RAG workflow that:
+The ISMS RAG Platform provides a workflow that can:
 
-1. Processes security-framework documents
-2. Splits them into retrievable chunks
-3. Generates semantic embeddings
-4. Stores them in ChromaDB
-5. Retrieves relevant context for a user query
-6. Uses an LLM to generate a context-aware response
+- ingest security-framework documents
+- extract and normalize text and metadata
+- split documents into configurable chunks
+- generate multilingual embeddings
+- persist embeddings in ChromaDB
+- retrieve semantically relevant controls and requirements
+- filter results by security framework
+- generate context-aware answers using an LLM
+- return supporting source information and relevance scores
+- answer questions in both **English and French**
 
-The platform supports both **English and French** queries.
+The platform supports **local LLM inference with Ollama** as well as optional OpenAI integration.
 
-## Architecture
+## RAG Architecture
 
 ```mermaid
 flowchart LR
-    A[Security Framework Documents] --> B[Document Processor]
+    A[Security Framework Documents] --> B[Document Processing]
     B --> C[Chunking & Metadata]
-    C --> D[Embedding Model]
-    D --> E[(ChromaDB Vector Store)]
+    C --> D[Multilingual Embeddings]
+    D --> E[(ChromaDB)]
 
-    F[User Question] --> G[Query Engine]
+    F[User Query] --> G[Query Engine]
     G --> E
-    E --> H[Relevant Context]
-    H --> I[LLM]
-    F --> I
-    I --> J[Context-Aware Response]
+    E --> H[Semantic Retrieval]
+    H --> I[Relevant Context]
+    I --> J[LLM]
+    F --> J
+    J --> K[Grounded Response]
+    K --> L[Sources & Relevance Scores]
 ```
 
-## Core Components
+## Supported Knowledge Sources
 
-### Document Processing
+The ingestion pipeline is designed for security and compliance content such as:
 
-`src/document_processor.py`
+- **ISO/IEC 27001**
+- **NIST Cybersecurity Framework**
+- **CIS Critical Security Controls**
+- internal security policies
+- other structured security documentation
 
-Handles document loading, text extraction, chunking, and metadata preparation before ingestion into the vector database.
+Framework source documents themselves are intentionally excluded from the public repository.
 
-### Vector Store
+## Core Capabilities
 
-`src/vector_store.py`
+### Multi-Format Document Processing
 
-Provides persistent ChromaDB storage and semantic retrieval for framework content.
+The document-processing pipeline supports:
+
+- PDF
+- DOCX
+- TXT
+
+It performs:
+
+- text extraction
+- configurable chunking
+- overlapping context windows
+- metadata preservation
+- framework identification
+- preparation for vector ingestion
+
+Implementation:
+
+```text
+src/document_processor.py
+```
+
+### Semantic Search
+
+Documents are embedded using multilingual Sentence Transformer models and stored in **ChromaDB**.
+
+The retrieval layer supports:
+
+- persistent vector storage
+- semantic similarity search
+- configurable top-K retrieval
+- similarity thresholds
+- framework-specific filtering
+- relevance scoring
+
+Implementation:
+
+```text
+src/vector_store.py
+```
 
 ### Framework Ingestion
 
-`src/ingest_frameworks.py`
+The ingestion workflow processes framework documents and loads them into the vector database.
 
-Processes framework documents and loads their embeddings into the configured ChromaDB collection.
+```text
+src/ingest_frameworks.py
+```
+
+Typical flow:
+
+```text
+Documents
+   ↓
+Parsing
+   ↓
+Chunking
+   ↓
+Metadata
+   ↓
+Embeddings
+   ↓
+ChromaDB
+```
 
 ### RAG Query Engine
 
-`src/query_engine.py`
+The query engine combines retrieved framework context with a language model.
 
-Implements the retrieval and generation workflow.
+Implementation:
 
-The query engine:
+```text
+src/query_engine.py
+```
 
-- retrieves semantically relevant framework content
-- builds contextual prompts
-- supports English and French
-- supports OpenAI or local Ollama-based generation
-- returns responses grounded in retrieved context
+It supports:
+
+- semantic context retrieval
+- English and French prompts
+- framework filtering
+- source-aware responses
+- configurable generation parameters
+- Ollama-based local inference
+- optional OpenAI inference
+
+### Local LLM Support
+
+The platform supports **Ollama** for local inference.
+
+This allows security documentation and retrieved context to remain on the local machine instead of necessarily being transmitted to an external LLM provider.
+
+Compatible local models can include models such as:
+
+```text
+llama3.2
+mistral
+qwen
+```
+
+OpenAI integration is also available through environment configuration.
 
 ### Interactive Demo
 
-`src/demo.py`
+An interactive command-line interface is included:
 
-Provides an interactive interface for testing framework questions and exploring the RAG workflow.
+```bash
+python src/demo.py
+```
 
-## Technology Stack
+The demo supports:
 
-| Area | Technology |
-|---|---|
-| Language | Python |
-| RAG | Retrieval-Augmented Generation |
-| Vector Database | ChromaDB |
-| Embeddings | Sentence Transformers |
-| LLM | Ollama / OpenAI |
-| Configuration | Environment variables |
-| Testing | Python test suite |
-| Security Domain | ISMS & cybersecurity compliance |
+- custom questions
+- French example questions
+- English example questions
+- knowledge-base statistics
+- interactive exploration of retrieved security guidance
 
-## Example Use Cases
+## Example Queries
 
-The platform can support questions such as:
+English:
 
 ```text
 What controls are relevant to access management?
@@ -102,56 +187,190 @@ How does ISO 27001 address information-security risk?
 ```
 
 ```text
-What security measures relate to incident response?
+What guidance is relevant to incident response?
+```
+
+French:
+
+```text
+Quelles sont les exigences liées au contrôle d'accès ?
 ```
 
 ```text
-Quels contrôles concernent la gestion des accès ?
+Comment gérer les incidents de sécurité selon les référentiels disponibles ?
 ```
 
-The objective is not to replace the original standards, but to provide a faster interface for locating and understanding relevant security guidance.
+The platform is designed to help locate relevant material quickly rather than replace the authoritative framework documents.
+
+## Technology Stack
+
+| Area | Technology |
+|---|---|
+| Language | Python |
+| RAG | Retrieval-Augmented Generation |
+| Document Processing | LangChain, PyPDF, python-docx |
+| Embeddings | Sentence Transformers |
+| Vector Database | ChromaDB |
+| Local LLM | Ollama |
+| Optional External LLM | OpenAI |
+| Interface | Interactive CLI |
+| Configuration | Environment variables |
+| Domain | ISMS, cybersecurity & compliance |
 
 ## Configuration
 
-Create your local environment file:
+Create a local configuration file:
 
 ```bash
 cp .env.example .env
 ```
 
-The main configuration options include:
+Important settings include:
 
 ```text
 OPENAI_API_KEY
 LLM_MODEL
 LLM_TEMPERATURE
 MAX_TOKENS
+
 EMBEDDING_MODEL
+
 CHROMA_PERSIST_DIRECTORY
 CHROMA_COLLECTION_NAME
+
 CHUNK_SIZE
 CHUNK_OVERLAP
+
 DEFAULT_LANGUAGE
+SUPPORTED_LANGUAGES
+
 TOP_K_RESULTS
 SIMILARITY_THRESHOLD
 ```
 
-For a local LLM workflow, Ollama can be used instead of an external LLM provider.
+Example retrieval configuration:
 
-Actual credentials must never be committed to the repository.
+```text
+CHUNK_SIZE=1000
+CHUNK_OVERLAP=200
+TOP_K_RESULTS=5
+SIMILARITY_THRESHOLD=0.7
+```
+
+Actual credentials belong only in the local `.env` file and must never be committed.
+
+## Quick Start
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/Yahmedd/isms-rag-platform.git
+cd isms-rag-platform
+```
+
+### 2. Create a virtual environment
+
+Windows:
+
+```bash
+python -m venv venv
+venv\Scripts\activate
+```
+
+Linux/macOS:
+
+```bash
+python -m venv venv
+source venv/bin/activate
+```
+
+### 3. Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Configure the environment
+
+```bash
+cp .env.example .env
+```
+
+### 5. Optional: use a local Ollama model
+
+```bash
+ollama pull llama3.2
+```
+
+### 6. Verify the environment
+
+```bash
+python verify_setup.py
+```
+
+### 7. Ingest framework documents
+
+Place your authorized framework or policy documents in your local data directory, then run:
+
+```bash
+python src/ingest_frameworks.py
+```
+
+### 8. Start the interactive demo
+
+```bash
+python src/demo.py
+```
+
+## Programmatic Usage
+
+Example initialization:
+
+```python
+from src.vector_store import VectorStore, RAGRetriever
+from src.query_engine import ISMSQueryEngine, ISMSAssistant
+
+vector_store = VectorStore(
+    collection_name="isms_frameworks",
+    persist_directory="./chroma_db"
+)
+
+retriever = RAGRetriever(vector_store)
+
+engine = ISMSQueryEngine(
+    retriever=retriever,
+    language="en",
+    model="llama3.2",
+    use_ollama=True
+)
+
+assistant = ISMSAssistant(engine)
+
+answer = assistant.ask(
+    "What controls are relevant to access management?",
+    framework="iso27001",
+    language="en"
+)
+
+print(answer)
+```
 
 ## Repository Structure
 
 ```text
 isms-rag-platform/
 ├── src/
+│   ├── __init__.py
 │   ├── config.py
 │   ├── demo.py
 │   ├── document_processor.py
 │   ├── ingest_frameworks.py
 │   ├── query_engine.py
 │   └── vector_store.py
+│
 ├── tests/
+│   └── __init__.py
+│
 ├── test_document_processor.py
 ├── test_e2e.py
 ├── test_query_engine.py
@@ -160,72 +379,111 @@ isms-rag-platform/
 ├── requirements.txt
 ├── .env.example
 ├── .gitignore
+├── SECURITY.md
+├── LICENSE
 └── README.md
 ```
 
-Generated vector databases, local framework documents, environment files, model artifacts, and virtual environments are intentionally excluded from the public repository.
+Generated databases, framework documents, virtual environments, and local configuration files are intentionally excluded.
 
 ## Testing
 
-The project contains tests covering the main RAG components, including:
+The project includes component and end-to-end validation for:
 
 - document processing
 - vector-store operations
 - query-engine behavior
-- end-to-end retrieval workflow
+- retrieval workflows
+- environment configuration
 
-Example:
+Run the available tests with:
 
 ```bash
 pytest
 ```
 
-A setup verification utility is also included:
+Individual tests can also be executed directly:
+
+```bash
+python test_document_processor.py
+python test_vector_store.py
+python test_query_engine.py
+python test_e2e.py
+```
+
+Environment verification:
 
 ```bash
 python verify_setup.py
 ```
 
-## Privacy & Local AI
+## Security & Privacy
 
-The architecture supports **Ollama-based local inference**, allowing sensitive security documentation to be processed without necessarily sending the retrieved context to an external LLM API.
+Security documentation can contain sensitive internal information.
 
-This makes the approach particularly relevant for ISMS and compliance scenarios involving internal or sensitive documentation.
+For that reason, the project supports a local architecture using:
+
+```text
+Local documents
+      ↓
+Sentence Transformer embeddings
+      ↓
+Local ChromaDB
+      ↓
+Local Ollama LLM
+```
+
+This allows the RAG workflow to operate without necessarily sending document content to an external AI service.
+
+The public portfolio repository does not include:
+
+- private framework documents
+- organizational policies
+- `.env` files
+- API credentials
+- generated vector embeddings
+- ChromaDB databases
+- cached models
+- virtual environments
+- test databases
+- Python cache files
 
 ## What This Project Demonstrates
 
 - Retrieval-Augmented Generation
+- security-focused AI applications
 - semantic search
+- multilingual embeddings
 - vector databases
-- document chunking and embeddings
-- LLM integration
-- local LLM usage with Ollama
-- bilingual RAG workflows
-- security-framework knowledge retrieval
-- ISMS and cybersecurity compliance automation
-- Python application architecture
+- document ingestion pipelines
+- metadata-aware retrieval
+- source-aware answer generation
+- configurable similarity retrieval
+- Ollama local LLM integration
+- optional OpenAI integration
+- bilingual English/French workflows
+- ISO 27001 / NIST / CIS knowledge retrieval
+- Python software architecture
+- privacy-conscious AI design
 
-## Security Notice
+## Portfolio Context
 
-This repository is a sanitized portfolio version of the project.
+This project explores the intersection of:
 
-The following are intentionally excluded:
+**Cybersecurity + Compliance + Artificial Intelligence**
 
-- `.env` files
-- API credentials
-- generated ChromaDB databases
-- source framework documents
-- local vector embeddings
-- virtual environments
-- test databases
-- cached Python artifacts
-
-The repository contains implementation code and configuration examples only.
+It demonstrates how RAG can be applied to security-framework navigation while keeping retrieval grounded in the source documentation.
 
 ## Disclaimer
 
-Generated responses should be treated as an aid for navigating security documentation and not as a substitute for consulting the authoritative version of a standard or framework.
+Generated responses are intended to assist with locating and understanding relevant security guidance.
+
+They should not be treated as authoritative compliance advice or as a replacement for consulting the official version of a standard or framework.
+
+## Security
+
+See [SECURITY.md](SECURITY.md) for repository security guidance.
 
 ## License
 
-MIT
+MIT License.
