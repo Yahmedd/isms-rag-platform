@@ -484,6 +484,8 @@ They should not be treated as authoritative compliance advice or as a replacemen
 
 See [SECURITY.md](SECURITY.md) for repository security guidance.
 
+- [LLM threat model (OWASP Top 10 for LLM Applications 2025 + NIST AI RMF)](docs/threat-model-llm.md)
+
 ## License
 
 MIT License.
